@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <title>Invoice Generator</title>
     <style>
         * {
@@ -128,10 +132,27 @@
             padding-top: 20px;
             border-top: 1px solid #ddd;
         }
+
+        #service-hide{
+            display: none;
+        }
+
+        .divBox{
+            display: flex; 
+            justify-content: space-between;
+        }
+
+        .deleteBtn{
+            padding: 10px 20px;
+            background-color: red;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="elem">
         <form id="invoiceForm">
             <h1>Invoice Generator</h1>
             
@@ -184,31 +205,39 @@
                 </div>
             </div>
 
-            <div class="details-box">
-                <h3>Service Details</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="description">Description:</label>
-                        <input type="text" id="description" required>
+            <div class="details-box" id="serviceBox">
+                <h3 style="margin-bottom: 1rem;">Service Details</h3>
+                <div class="repeat">
+                    <div class="divBox">
+                        <h4 id="service-hide">Service 1</h4>
                     </div>
-                    <div class="form-group">
-                        <label for="rateType">Rate Type:</label>
-                        <select id="rateType" required>
-                            <option value="hourly">Hourly Rate</option>
-                            <option value="daily">Daily Rate</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <input type="text" id="description" class="description" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rateType">Rate Type:</label>
+                            <select id="rateType" class="rateType" required>
+                                <option value="hourly">Hourly Rate</option>
+                                <option value="daily">Daily Rate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantity">Number of Hours/Days:</label>
+                            <input type="number" id="quantity" class="quantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rate">Rate (INR):</label>
+                            <input type="number" id="rate" class="rate" required>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="quantity">Number of Hours/Days:</label>
-                        <input type="number" id="quantity" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="rate">Rate (INR):</label>
-                        <input type="number" id="rate" required>
-                    </div>
-                </div>
+            </div>
+            <div class="form-row">
+                <button id="add">Add Service</button>
             </div>
 
             <div class="details-box">
@@ -311,7 +340,10 @@
                 <p><strong>Trainer Name:</strong> <span id="displayTrainerName2"></span></p>
             </div>
 
-            <button onclick="editInvoice()">Edit Invoice</button>
+            <div id="invoiceButtons">
+                <button class="editBtn" onclick="editInvoice()" style="margin-top: 1rem;">Edit Invoice</button>
+                <button class="downloadBtn" onclick="downloadInvoice()" style="margin-top: 1rem;">Download</button>
+            </div>
         </div>
     </div>
 
@@ -328,6 +360,132 @@
             if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
             return numberToWords(Math.floor(num / 100000)) + ' lakh' + (num % 100000 ? ' ' + numberToWords(num % 100000) : '');
         }
+
+        const serviceHide = document.getElementById('service-hide');
+        // const repeatDiv = document.querySelector('.repeat');
+        const serviceBox = document.getElementById('serviceBox');
+        // const descriptionRepeat = repeatDiv.childNodes[1].childNodes[1].childNodes[1];
+
+        let i = 0;
+        document.getElementById('add').addEventListener("click", function(e){
+            e.preventDefault();
+            i++;
+            if(i > 0){
+                serviceHide.style.display = "block";
+            }
+            
+            const Form = document.createElement("div");
+            Form.setAttribute("class", "repeat");
+
+            const divBoxCreate = document.createElement("div");
+            divBoxCreate.classList = "divBox";
+            const delBtn = document.createElement("a");
+            delBtn.classList.add("deleteBtn");
+            delBtn.innerText = "Delete";
+
+            delBtn.addEventListener("click", function(){
+                serviceBox.removeChild(Form);
+                i--;
+                if(i===0){
+                    serviceHide.style.display = "none";
+                }
+            })
+            
+            const formRow1 = document.createElement("div");
+            formRow1.setAttribute("class", "form-row");
+            const formGroup1 = document.createElement("div");
+            formGroup1.setAttribute("class", "form-group");
+
+            const label1 = document.createElement("label");
+            label1.setAttribute("for", "description" + i);
+            label1.innerText = "Description:"
+
+            const input1 = document.createElement("input");
+            input1.setAttribute("type", "text");
+            input1.setAttribute("id", "description" + i);
+            input1.setAttribute("class", "description");
+
+            const formGroup2 = document.createElement("div");
+            formGroup2.setAttribute("class", "form-group")
+
+            const label2 = document.createElement("label");
+            label2.setAttribute("for", "rateType" + i);
+            label2.innerText = "Rate Type:"
+
+            const input2 = document.createElement("select");
+            input2.setAttribute("id", "rateType" + i);
+            input2.setAttribute("class", "rateType");
+
+            const option1 = document.createElement("option");
+            option1.setAttribute("value", "hourly");
+            option1.innerText = "Hourly Rate";            
+            
+            const option2 = document.createElement("option");
+            option2.setAttribute("value", "daily");
+            option2.innerText = "Daily Rate";
+
+            input2.appendChild(option1);
+            input2.appendChild(option2);
+
+            const formRow2 = document.createElement("div");
+            formRow2.setAttribute("class", "form-row");
+            const formGroup3 = document.createElement("div");
+            formGroup3.setAttribute("class", "form-group");
+
+            const label3 = document.createElement("label");
+            label3.setAttribute("for", "quantity" + i);
+            label3.innerText = "Number of Hours/Days:"
+
+            const input3 = document.createElement("input");
+            input3.setAttribute("type", "number");
+            input3.setAttribute("id", "quantity" + i);
+            input3.setAttribute("class", "quantity");
+
+            const formGroup4 = document.createElement("div");
+            formGroup4.setAttribute("class", "form-group");
+
+            const label4 = document.createElement("label");
+            label4.setAttribute("for", "rate" + i);
+            label4.innerText = "Rate (INR):"
+
+            const input4 = document.createElement("input");
+            input4.setAttribute("type", "number");
+            input4.setAttribute("id", "rate" + i);
+            input4.setAttribute("class", "rate");
+
+            const serviceHeader = document.createElement("h4");
+            serviceHeader.innerText = "Service " + (i+1);
+
+
+            formGroup1.appendChild(label1);
+            formGroup1.appendChild(input1);
+            
+            formGroup2.appendChild(label2);
+            formGroup2.appendChild(input2);
+
+            formGroup3.appendChild(label3);
+            formGroup3.appendChild(input3);
+
+            formGroup4.appendChild(label4);
+            formGroup4.appendChild(input4);
+
+            formRow1.appendChild(formGroup1);
+            formRow1.appendChild(formGroup2);
+
+            formRow2.appendChild(formGroup3);
+            formRow2.appendChild(formGroup4);
+
+            divBoxCreate.appendChild(serviceHeader);
+            divBoxCreate.appendChild(delBtn);
+            
+            Form.appendChild(divBoxCreate);
+            Form.appendChild(formRow1);
+            Form.appendChild(formRow2);
+
+            serviceBox.appendChild(Form);
+
+            //console.log(appendChild);
+        });
 
         document.getElementById('invoiceForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -355,8 +513,41 @@
             const panNumber = document.getElementById('panNumber').value;
             const bankAddress = document.getElementById('bankAddress').value;
 
+            const descriptions = document.querySelectorAll('.description');
+            const rateTypes = document.querySelectorAll('.rateType');
+            const quantities = document.querySelectorAll('.quantity');
+            const rates = document.querySelectorAll('.rate');
+
+
             // Calculate amount
             const amount = quantity * rate;
+
+            let totalAmount = 0; // Initialize total amount for invoice
+            const invoiceRows = []; // Array to store service details
+
+            // for (let i = 0; i < quantities.length; i++) {
+            //     const quantity = parseFloat(quantities[i].value) || 0;
+            //     const rate = parseFloat(rates[i].value) || 0; 
+            //     const amount = quantity * rate; 
+            //     amounts.push(amount);
+            // }
+
+            for (let i = 0; i < quantities.length; i++) {
+                const quantity = parseFloat(quantities[i].value) || 0;
+                const rate = parseFloat(rates[i].value) || 0; 
+                const amount = quantity * rate; // Calculate amount for each service
+                totalAmount += amount; // Add to total amount
+                
+                invoiceRows.push({
+                    description: descriptions[i].value,
+                    quantity: quantity,
+                    rate: rate,
+                    amount: amount,
+                    rateType: rateTypes[i].value
+                });
+            }
+
+            // console.log(amounts);
 
             // Update invoice display
             document.getElementById('displayInvoiceName').textContent = invoiceName;
@@ -371,18 +562,39 @@
             document.getElementById('displayTrainerName').textContent = trainerName;
             document.getElementById('displayTrainerName2').textContent = trainerName;
             document.getElementById('displayTrainerNo').textContent = trainerNo;
-            document.getElementById('displayDescription').textContent = description;
-            document.getElementById('displayQuantity').textContent = `${quantity} ${rateType === 'hourly' ? 'Hours' : 'Days'}`;
-            document.getElementById('displayRate').textContent = rate;
-            document.getElementById('displayAmount').textContent = amount;
-            document.getElementById('displayTotal').textContent = amount;
-            document.getElementById('displayAmountInWords').textContent = numberToWords(amount) + ' rupees only';
+            // document.getElementById('displayDescription').textContent = description;
+            // document.getElementById('displayQuantity').textContent = `${quantity} ${rateType === 'hourly' ? 'Hours' : 'Days'}`;
+            // document.getElementById('displayRate').textContent = rate;
+            // document.getElementById('displayAmount').textContent = amount;
+            // document.getElementById('displayTotal').textContent = amount;
+            // document.getElementById('displayAmountInWords').textContent = numberToWords(amount) + ' rupees only';
             document.getElementById('displayBankName').textContent = bankName;
             document.getElementById('displayAccountNo').textContent = accountNo;
             document.getElementById('displayIfscCode').textContent = ifscCode;
             document.getElementById('displayAccountHolderName').textContent=accountHolderName;
             document.getElementById('displayPanNumber').textContent=panNumber;
             document.getElementById('displayBankAddress').textContent=bankAddress;
+
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            // Add service details to the invoice
+            invoiceRows.forEach((row) => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${row.description}</td>
+                    <td>${row.quantity} ${row.rateType === 'hourly' ? 'Hours' : 'Days'}</td>
+                    <td>${row.rate}</td>
+                    <td>${row.amount}</td>
+                `;
+                tbody.appendChild(newRow);
+            });
+
+            // Update total and amount in words
+            document.getElementById('displayTotal').textContent = totalAmount;
+            document.getElementById('displayAmountInWords').textContent = numberToWords(totalAmount) + ' rupees only';
+
+
 
             // Hide form and show invoice
             document.getElementById('invoiceForm').style.display = 'none';
@@ -392,6 +604,37 @@
         function editInvoice() {
             document.getElementById('invoiceForm').style.display = 'block';
             document.getElementById('invoice').style.display = 'none';
+        }
+
+        function downloadInvoice() {
+
+            var elem = document.getElementById("elem");
+            const buttonsContainer = document.getElementById('invoiceButtons');
+            buttonsContainer.style.display = 'none';
+
+                let opt = {
+                    margin: 7,
+                    filename: "User.pdf",
+                    // filename: arr.name + '.pdf',
+                    image: {
+                        type: "jpeg",
+                        quality: 1,
+                    },
+                    html2canvas: {
+                        scale: 2,
+                        scrollY: 0,
+                    },
+                    jsPDF: {
+                        unit: "mm",
+                        format: "a4",
+                        orientation: "portrait",
+                    },
+                };
+
+                html2pdf().from(elem).set(opt).save().then(() => {
+                    // Show the buttons again after downloading
+                    buttonsContainer.style.display = 'block';
+                });
         }
     </script>
 </body>
